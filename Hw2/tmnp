@@ -1,0 +1,17 @@
+for patient in dict:
+        if patient["city"]  == "NaN":
+            print(patient)
+            patient["city"] = province_dict[patient["province"]]
+            print(patient)
+            
+            
+for token in contents:
+    if token.endswith("ies"):
+        token = token.replace('ies','y',1)
+        print token
+    elif token.endswith('s'):
+        print token[0:-1]
+    elif token.endswith("ed"):
+        print token[0:-2]
+    elif token.endswith("ing"):
+        print token[0:-3]
