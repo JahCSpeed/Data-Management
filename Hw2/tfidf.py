@@ -1,3 +1,4 @@
+from cmath import e
 import math
 from collections import defaultdict
 from collections import Counter
@@ -83,23 +84,47 @@ def frequencyOfWords(text):
 
 def term_freq(dict,text):
     freq = defaultdict(float)
-    for entry in dict:
+    for entry in dict:  
         freq[entry[0]] = float((float(entry[1]) / (len(str(text).split()))))
-    print(freq)
+    return freq
 
+def compute_IDF(file_count,term_count):
+    natural_log = math.log(math.e)
+    return natural_log * (file_count / (term_count)) + 1
+def get_word_count_dict(freq_dict):
+    word_dict = defaultdict(list)
+    f_word_dict = defaultdict(float)
+    for file in freq_dict:
+        for word_count in freq_dict[file]:
+            word_dict[word_count[0]].append(word_count[1])
+    for word in word_dict:
+        f_word_dict[word] = sum(word_dict[word])
+    return f_word_dict
 
+def idf_dict(dict,files):
+    idf_dict = defaultdict(float)
+    for entry in dict:
+        idf_dict[entry] = compute_IDF(len(files),dict[entry])
+    return idf_dict
 def workingFiles():
     with open(FILE_PATH, 'r') as f:
         text = f.read()
     return text.split()
     
 def main():
+    tf_list = defaultdict()
+    clean_text = defaultdict(str)
+    freq_text = defaultdict()
     for file in workingFiles():
         text = cleanText(file)
         text = removeStopWords(STOP_WORDS_PATH,text)
         text = get_root_words(text)
+        clean_text[file] = text
         write_to_file((OUTPUT_PATH + file),text)
         dict = frequencyOfWords(text)
-        term_freq(dict,text)
+        freq_text[file] = dict
+        tf_list[file] = term_freq(dict,text)
+    tmp = get_word_count_dict(freq_text)
+    idf = idf_dict(tmp,workingFiles())
     return
 main()
