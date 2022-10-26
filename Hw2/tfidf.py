@@ -110,6 +110,13 @@ def workingFiles():
     with open(FILE_PATH, 'r') as f:
         text = f.read()
     return text.split()
+
+def calculate_TFIDF(idf_dict,tf_dict):
+    final_dict = defaultdict(float)
+    for file in tf_dict:
+        for word in tf_dict[file]:
+            final_dict[word] = round(tf_dict[file][word] * idf_dict[word],2)
+    return final_dict
     
 def main():
     tf_list = defaultdict()
@@ -124,7 +131,7 @@ def main():
         dict = frequencyOfWords(text)
         freq_text[file] = dict
         tf_list[file] = term_freq(dict,text)
-    tmp = get_word_count_dict(freq_text)
-    idf = idf_dict(tmp,workingFiles())
+    idf = idf_dict(get_word_count_dict(freq_text),workingFiles())
+    print(calculate_TFIDF(idf,tf_list))
     return
 main()
