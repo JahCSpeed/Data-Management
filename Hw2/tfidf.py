@@ -1,14 +1,12 @@
-from cmath import e
 import math
 from collections import defaultdict
 from collections import Counter
 import csv
-from os import remove
 import re
-import filecmp
 FILE_PATH = "tfidf_docs.txt"
 STOP_WORDS_PATH = "stopwords.txt"
 OUTPUT_PATH = "preproc_"
+TFIDF_OUTPUT_PATH = "tfidf_"
 def removeExtraWhite(text):
     split = text.split()
     return " ".join(split)
@@ -84,21 +82,20 @@ def frequencyOfWords(text):
 
 def term_freq(dict,text):
     freq = defaultdict(float)
-    for entry in dict:  
+    for entry in dict: 
         freq[entry[0]] = float((float(entry[1]) / (len(str(text).split()))))
     return freq
 
 def compute_IDF(file_count,term_count):
-    natural_log = math.log(math.e)
-    return natural_log * (file_count / (term_count)) + 1
+    return math.log(file_count / (term_count)) + 1
 def get_word_count_dict(freq_dict):
-    word_dict = defaultdict(list)
     f_word_dict = defaultdict(float)
     for file in freq_dict:
-        for word_count in freq_dict[file]:
-            word_dict[word_count[0]].append(word_count[1])
-    for word in word_dict:
-        f_word_dict[word] = sum(word_dict[word])
+        for entry in freq_dict[file]:
+            if entry[0] in f_word_dict:
+                f_word_dict[entry[0]] = f_word_dict[entry[0]]  + 1
+            else:
+                f_word_dict[entry[0]] = 1
     return f_word_dict
 
 def idf_dict(dict,files):
@@ -112,12 +109,37 @@ def workingFiles():
     return text.split()
 
 def calculate_TFIDF(idf_dict,tf_dict):
-    final_dict = defaultdict(float)
+    final_dict = defaultdict()
     for file in tf_dict:
+        inner_dict = defaultdict(float)
         for word in tf_dict[file]:
-            final_dict[word] = round(tf_dict[file][word] * idf_dict[word],2)
+            inner_dict[word] = round(tf_dict[file][word] * idf_dict[word],2)
+        final_dict[file] = inner_dict
     return final_dict
-    
+
+def get_important_words(tf_dict,tfidf_dict):
+    tfidf_per_file = defaultdict()
+    for file in tf_dict:
+        temp_dict = []
+        for word in tf_dict[file]:
+            temp_dict.append((word,tfidf_dict[file][word]))
+        temp_dict = sort_Tuple(temp_dict)
+        tfidf_per_file[file] = temp_dict[0:5]
+    return tfidf_per_file
+def sort_Tuple(tup):
+    lst = len(tup)
+    for i in range(0, lst):      
+        for j in range(0, lst-i-1):
+            if (tup[j][1] < tup[j + 1][1]):
+                temp = tup[j]
+                tup[j]= tup[j + 1]
+                tup[j + 1]= temp
+            if (tup[j][1]  == tup[j + 1][1]):
+                if (tup[j][0]  > tup[j + 1][0]):
+                    temp = tup[j]
+                    tup[j]= tup[j + 1]
+                    tup[j + 1]= temp
+    return tup
 def main():
     tf_list = defaultdict()
     clean_text = defaultdict(str)
@@ -128,10 +150,12 @@ def main():
         text = get_root_words(text)
         clean_text[file] = text
         write_to_file((OUTPUT_PATH + file),text)
-        dict = frequencyOfWords(text)
-        freq_text[file] = dict
-        tf_list[file] = term_freq(dict,text)
+        freq_text[file] = frequencyOfWords(text)
+        tf_list[file] = term_freq(freq_text[file],text)
     idf = idf_dict(get_word_count_dict(freq_text),workingFiles())
-    print(calculate_TFIDF(idf,tf_list))
+    tfidf_dict = calculate_TFIDF(idf,tf_list)
+    tmp = get_important_words(tf_list,tfidf_dict)
+    for file in tmp:
+        write_to_file((TFIDF_OUTPUT_PATH + file),str(tmp[file]))
     return
 main()
