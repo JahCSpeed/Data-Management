@@ -129,7 +129,7 @@ def get_Personality():
             continue
         tmp_dict[pokemon["type"]].append(pokemon["personality"] )
     value = ("Pokemon type to personality mapping:\n\n")
-    for entry in tmp_dict:
+    for entry in sorted(tmp_dict):
         value = value + str(entry) + ": "
         temp = " ".join(str(x) for x in sorted(list(set(tmp_dict[entry])))).replace(" ",", ")
         value = value + str(temp) + "\n"
